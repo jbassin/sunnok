@@ -1,32 +1,86 @@
-/**
- * Some predefined delay values (in milliseconds).
- */
-export enum Delays {
-  Short = 500,
-  Medium = 2000,
-  Long = 5000,
+import { Client, Collection, Intents, Webhook } from 'discord.js';
+import { Sequelize } from 'sequelize';
+import { PrefixCommand, prefixCommands } from './commands.js';
+import { guildIds, prefix, token } from './config.js';
+import { Schema, setSchema } from './schema.js';
+
+export type ExtendedClient = Client & {
+  sql: Sequelize;
+  schema: Schema;
+  commands: Collection<string, PrefixCommand>;
+  webhooks: Collection<string, Webhook>;
+};
+
+const sql = new Sequelize({
+  dialect: 'sqlite',
+  storage: 'db.sqlite',
+  logging: false,
+});
+
+const client = new Client({
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
+}) as ExtendedClient;
+
+client.sql = sql;
+client.commands = new Collection();
+client.webhooks = new Collection();
+
+for (const command of prefixCommands) {
+  client.commands.set(command.name, command);
 }
 
-/**
- * Returns a Promise<string> that resolves after a given time.
- *
- * @param {string} name - A name.
- * @param {number=} [delay=Delays.Medium] - A number of milliseconds to delay resolution of the Promise.
- * @returns {Promise<string>}
- */
-function delayedHello(
-  name: string,
-  delay: number = Delays.Medium,
-): Promise<string> {
-  return new Promise((resolve: (value?: string) => void) =>
-    setTimeout(() => resolve(`Hello, ${name}`), delay),
-  );
-}
+client.on('messageCreate', async (message) => {
+  if (
+    !message.content.startsWith(prefix) ||
+    message.author.bot ||
+    message.webhookId
+  )
+    return;
 
-// Below are examples of using ESLint errors suppression
-// Here it is suppressing a missing return type definition for the greeter function.
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const command = args.shift().toLocaleLowerCase();
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export async function greeter(name: string) {
-  return await delayedHello(name, Delays.Long);
-}
+  if (!client.commands.has(command)) return;
+
+  try {
+    await client.commands.get(command).run(args, message, client);
+  } catch (error) {
+    console.error(error);
+    await message.reply({
+      content: `There was an error executing this command!\n${error}`,
+    });
+  }
+});
+
+client.once('ready', async () => {
+  for (const guildId of guildIds) {
+    const channels = await client.guilds.cache.get(guildId).channels.fetch();
+    for (const channel of channels.values()) {
+      if (!channel.isText()) continue;
+
+      const webhookName = 'hali-and-tenno';
+      const webhooks = await channel.fetchWebhooks();
+      let webhook = webhooks.find((webhook) => webhook.name === webhookName);
+
+      if (!webhook) {
+        webhook = await channel.createWebhook(webhookName, {
+          reason: 'To allow Hali and Tenno to speak through multiple forms.',
+        });
+      }
+
+      client.webhooks.set(channel.id, webhook);
+    }
+  }
+
+  try {
+    client.schema = setSchema(sql);
+    await sql.authenticate();
+    await sql.sync();
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+
+  console.log('Hali and Tenno are ready for duty!');
+});
+
+client.login(token);
