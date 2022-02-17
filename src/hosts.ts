@@ -47,7 +47,8 @@ export async function sendAs(
   message: WebhookMessageOptions,
 ) {
   const webhook = client.webhooks.get(channel);
-  await webhook.send({
+
+  return await webhook.send({
     ...message,
     username: host.name,
     avatarURL: host.image,

@@ -1,7 +1,10 @@
 import { Client, Collection, Intents, Webhook } from 'discord.js';
 import { Sequelize } from 'sequelize';
-import { PrefixCommand, prefixCommands } from './commands.js';
+import { getCommands, PrefixCommand } from './commands.js';
 import { guildIds, prefix, token } from './config.js';
+import { isAdmin } from './data.js';
+import { roll } from './parser.js';
+import { handleRoll } from './roll.js';
 import { Schema, setSchema } from './schema.js';
 
 export type ExtendedClient = Client & {
@@ -25,25 +28,31 @@ client.sql = sql;
 client.commands = new Collection();
 client.webhooks = new Collection();
 
-for (const command of prefixCommands) {
+for (const command of getCommands()) {
   client.commands.set(command.name, command);
 }
 
 client.on('messageCreate', async (message) => {
-  if (
-    !message.content.startsWith(prefix) ||
-    message.author.bot ||
-    message.webhookId
-  )
+  if (message.author.bot || message.webhookId) return;
+
+  const dice = roll(message.content);
+  if (dice) {
+    await handleRoll(dice, message, client);
     return;
+  }
+
+  if (!message.content.startsWith(prefix)) return;
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLocaleLowerCase();
 
   if (!client.commands.has(command)) return;
+  const commandObj = client.commands.get(command);
+
+  if (commandObj.perms.type === 'admin' && !isAdmin(message.author.id)) return;
 
   try {
-    await client.commands.get(command).run(args, message, client);
+    await commandObj.run(args, message, client);
   } catch (error) {
     console.error(error);
     await message.reply({

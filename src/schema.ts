@@ -1,9 +1,12 @@
 import { DataTypes, Model, ModelCtor } from 'sequelize';
 import { Sequelize } from 'sequelize/types/sequelize';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SchemaModel = ModelCtor<Model<any, any>>;
+
 export type Schema = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  insight: ModelCtor<Model<any, any>>;
+  insight: SchemaModel;
+  rolls: SchemaModel;
 };
 
 export function setSchema(sql: Sequelize): Schema {
@@ -20,7 +23,21 @@ export function setSchema(sql: Sequelize): Schema {
     },
   );
 
-  return { insight };
+  const rolls = sql.define(
+    'roll',
+    {
+      id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+      value: DataTypes.INTEGER,
+      base: DataTypes.INTEGER,
+      player: DataTypes.STRING,
+    },
+    {
+      timestamps: true,
+      updatedAt: false,
+    },
+  );
+
+  return { insight, rolls };
 }
 
 export async function addInsight({ insight }: Schema, quantity: number) {
@@ -29,4 +46,12 @@ export async function addInsight({ insight }: Schema, quantity: number) {
 
 export async function totalInsight({ insight }: Schema): Promise<number> {
   return await insight.sum('quantity');
+}
+
+export async function recordRoll(
+  { rolls }: Schema,
+  player: string,
+  roll: { value: number; base: number },
+) {
+  await rolls.build({ ...roll, player }).save();
 }
