@@ -29,6 +29,12 @@ export const void_beyond: Host = {
   color: '#7b00ff',
 };
 
+export const rector_ashmont: Host = {
+  name: 'Rector Ashmont',
+  image: 'https://i.imgur.com/AMtThtk.png',
+  color: '#daa520',
+};
+
 export function embedAs(host: Host, title: string | null, contents: string) {
   const embed = new MessageEmbed()
     .setDescription(contents)

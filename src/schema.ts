@@ -55,3 +55,16 @@ export async function recordRoll(
 ) {
   await rolls.build({ ...roll, player }).save();
 }
+
+export async function getRolls({
+  rolls,
+}: Schema): Promise<
+  { value: number; base: number; player: string; time: Date }[]
+> {
+  return (await rolls.findAll()).map((model: any) => ({
+    value: model.value,
+    base: model.base,
+    player: model.player,
+    time: model.createdAt,
+  }));
+}

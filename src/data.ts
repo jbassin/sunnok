@@ -1,8 +1,11 @@
+import { ColorResolvable } from 'discord.js';
+
 export type Player = {
   ids: string[];
   name: string;
   char: string;
   admin: boolean;
+  color: ColorResolvable;
   img: string | null;
 };
 
@@ -11,6 +14,7 @@ function player(
   name: string,
   char: string,
   admin: boolean,
+  color: ColorResolvable,
   cls: P2EClass,
 ): Player {
   return {
@@ -18,6 +22,7 @@ function player(
     name,
     char,
     admin,
+    color,
     img: classImg(cls),
   };
 }
@@ -60,19 +65,41 @@ export const players: Player[] = [
     'josh',
     'The DM',
     true,
+    '#1b5e20',
     'dm',
   ),
   player(
     ['712150290169593856', '753011285003730955'],
     'jorge',
-    "War'Tok Nomi",
+    'Desmond Reza',
     false,
-    'cleric',
+    '#e65100',
+    'gunslinger',
   ),
-  player(['555850241912602631'], 'mike', 'Crisco Wilford', false, 'wizard'),
-  player(['652106046571020299'], 'noah', 'Theodore', false, 'champion'),
-  player(['417896818844893194'], 'tanner', 'Tanner', false, 'fighter'),
-  player(['718654848022609982'], 'sam', 'Sam', false, 'rogue'),
+  player(
+    ['555850241912602631'],
+    'mike',
+    'Divex Vistok',
+    false,
+    '#4a148c',
+    'wizard',
+  ),
+  player(
+    ['652106046571020299'],
+    'noah',
+    'Big Fish',
+    false,
+    '#b71c1c',
+    'inventor',
+  ),
+  player(
+    ['417896818844893194'],
+    'tanner',
+    'Henrik Bosco',
+    false,
+    '#0d47a1',
+    'fighter',
+  ),
 ];
 
 export function getPlayer(id: string): Player {

@@ -1,10 +1,11 @@
+import { randomInt } from 'crypto';
 import { Message } from 'discord.js';
+import { playerChartCommand, weekChartCommand } from './charts.js';
+import { embedAs, hali, sendAs, tenno } from './hosts.js';
 import insight from './insight.js';
 import { ExtendedClient } from './main.js';
-import rollcall from './rollcall.js';
 import poll from './poll.js';
-import { embedAs, hali, sendAs, tenno } from './hosts.js';
-import { randomInt } from 'crypto';
+import rollcall from './rollcall.js';
 
 export type PrefixCommand = {
   name: string;
@@ -20,7 +21,13 @@ export type PrefixCommand = {
       ) => Promise<void>);
 };
 
-const prefixCommands: PrefixCommand[] = [insight, poll, rollcall];
+const prefixCommands: PrefixCommand[] = [
+  insight,
+  poll,
+  rollcall,
+  weekChartCommand,
+  playerChartCommand,
+];
 
 export function getCommands() {
   const help: PrefixCommand = {

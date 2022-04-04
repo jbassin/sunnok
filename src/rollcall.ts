@@ -1,6 +1,14 @@
 import { Message } from 'discord.js';
 import { PrefixCommand } from './commands';
-import { embedAs, hali, Host, sendAs, tenno, void_beyond } from './hosts';
+import {
+  embedAs,
+  hali,
+  Host,
+  rector_ashmont,
+  sendAs,
+  tenno,
+  void_beyond,
+} from './hosts';
 import { ExtendedClient } from './main';
 
 const command: PrefixCommand = {
@@ -16,6 +24,7 @@ const command: PrefixCommand = {
 
     await send(tenno, 'I hear you loud and clear!');
     await send(hali, "We're listening, don't be so needy.");
+    await send(rector_ashmont, 'Happy to serve.');
     await send(void_beyond, '...');
   },
 };
